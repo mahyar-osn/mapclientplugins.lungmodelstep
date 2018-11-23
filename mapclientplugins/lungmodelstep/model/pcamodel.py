@@ -1,4 +1,9 @@
+import os
+import subprocess
+
 import numpy as np
+import pandas as pd
+
 from mapclientplugins.lungmodelstep.morphic.mesher import Mesh
 from mapclientplugins.lungmodelstep.fields.nodes import Nodes
 from mapclientplugins.lungmodelstep.fields.elements import Elements
@@ -22,6 +27,17 @@ class PCAModel(object):
         self._pcaModel.update_pca_nodes()
         leftNodes, rightNodes = self._getLeftLungNodes(), self._getRightLungNodes()
         return leftNodes, rightNodes
+
+    def morphAndExport(self, weights):
+        if self._nodes is not None:
+            self._nodes = None
+        self._nodes = Nodes()
+
+        output_dir = __file__ + '../temp'
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+
+        return
 
     def morph(self, weights):
         self._pcaModel.nodes['weights'].values[1:] = 0
@@ -47,6 +63,13 @@ class PCAModel(object):
             node = self._pcaModel.nodes[nodeNumber]
             nodeValues.append(node.values)
         return np.asarray(nodeValues, dtype=np.float64)
+
+    def _getLungNodeDescription(self, nArray, lung=None):
+        nodeIndx = self._nodes.setNode(lung=lung)
+        nodeDescription = np.zeros((nArray.shape[0], nArray.shape[1], nArray.shape[2] + 1))
+        for i in range(nodeDescription.shape[0]):
+            nodeDescription[i, :, 0] = float(nodeIndx[i])
+            nodeDescription[i, :, 1:] = nArray[i, :, :]
 
     def _getLeftNodeIndex(self):
         return self._nodes.setNode(lung='left')
