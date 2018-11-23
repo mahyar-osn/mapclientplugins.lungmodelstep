@@ -53,14 +53,14 @@ class MeshModel(object):
             graphics.setVisibilityFlag(show)
 
     def _initializeLeftLung(self):
-        nodefile = r'left_average.exnode'
-        elemfile = r'left_average.exelem'
+        nodefile = r'left_average_volume.exnode'
+        elemfile = r'left_average_volume.exelem'
         self._leftRegion.readFile(os.path.join('/', self._path, 'fields', nodefile))
         self._leftRegion.readFile(os.path.join('/', self._path, 'fields', elemfile))
 
     def _initializeRightLung(self):
-        nodefile = r'right_average.exnode'
-        elemfile = r'right_average.exelem'
+        nodefile = r'right_average_volume.exnode'
+        elemfile = r'right_average_volume.exelem'
         self._rightRegion.readFile(os.path.join('/', self._path, 'fields', nodefile))
         self._rightRegion.readFile(os.path.join('/', self._path, 'fields', elemfile))
 
