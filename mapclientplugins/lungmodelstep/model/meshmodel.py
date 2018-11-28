@@ -1,4 +1,4 @@
-import os
+import os, platform
 
 from scaffoldmaker.utils.zinc_utils import *
 
@@ -53,16 +53,25 @@ class MeshModel(object):
             graphics.setVisibilityFlag(show)
 
     def _initializeLeftLung(self):
-        nodefile = r'left_average_volume.exnode'
-        elemfile = r'left_average_volume.exelem'
-        self._leftRegion.readFile(os.path.join('/', self._path, 'fields', nodefile))
-        self._leftRegion.readFile(os.path.join('/', self._path, 'fields', elemfile))
+        nodefile = r'left_average.exnode'
+        elemfile = r'left_average.exelem'
+        if platform.system() == 'Windows':
+            self._leftRegion.readFile(os.path.join('../', self._path, 'fields', nodefile).replace("\\","/"))
+            self._leftRegion.readFile(os.path.join('../', self._path, 'fields', elemfile).replace("\\","/"))
+        else:
+            self._leftRegion.readFile(os.path.join('../', self._path, 'fields', nodefile))
+            self._leftRegion.readFile(os.path.join('../', self._path, 'fields', elemfile))
+
 
     def _initializeRightLung(self):
-        nodefile = r'right_average_volume.exnode'
-        elemfile = r'right_average_volume.exelem'
-        self._rightRegion.readFile(os.path.join('/', self._path, 'fields', nodefile))
-        self._rightRegion.readFile(os.path.join('/', self._path, 'fields', elemfile))
+        nodefile = r'right_average.exnode'
+        elemfile = r'right_average.exelem'
+        if platform.system() == 'Windows':
+            self._rightRegion.readFile(os.path.join('../', self._path, 'fields', nodefile).replace("\\","/"))
+            self._rightRegion.readFile(os.path.join('../', self._path, 'fields', elemfile).replace("\\","/"))
+        else:
+            self._rightRegion.readFile(os.path.join('../', self._path, 'fields', nodefile))
+            self._rightRegion.readFile(os.path.join('../', self._path, 'fields', elemfile))
 
     def _generateMesh(self):
         # Left Lung:
@@ -231,7 +240,10 @@ class MeshModel(object):
 
     @staticmethod
     def getPluginPath():
-        return '/'.join(__file__.split('/')[1:-2])
+        if platform.system() == 'Windows':
+            return '/'.join(__file__.split('\\')[:-2])
+        else:
+            return '/'.join(__file__.split('/')[1:-2])
 
     def isDisplaySurfaces(self, surfaceName):
         return self._getVisibility(surfaceName)
