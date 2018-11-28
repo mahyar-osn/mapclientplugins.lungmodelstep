@@ -7,6 +7,7 @@ class LungModelWidget(QtGui.QWidget):
 
     def __init__(self, model, pcaModelData, parent=None):
         super(LungModelWidget, self).__init__(parent)
+        self._logger = model._logger
         self._meshModel = model.getMeshModel()
         self._pcaModel = pcaModelData
         self._modeDict = {
@@ -72,7 +73,7 @@ class LungModelWidget(QtGui.QWidget):
         self._settings.update(settings)
 
     def getSettings(self):
-        eye, look_at, up, angle = self.__ui.sceneviewer_widget.getViewParameters()
+        eye, look_at, up, angle = self._ui.sceneviewer_widget.getViewParameters()
         self._settings['view-parameters'] = {'eye': eye, 'look_at': look_at, 'up': up, 'angle': angle}
         return self._settings
 
@@ -80,10 +81,6 @@ class LungModelWidget(QtGui.QWidget):
         self._doneCallback = done_callback
 
     def _leftLungUpperClicked(self):
-        # num = self._model._logger.getNumberOfMessages()
-        # print num
-        # for i in range(0, num):
-        #     print self._model._logger.getMessageTextAtIndex(i)
         checkBox = self._ui.leftlungUpper_checkBox.isChecked()
         self._meshModel.setDisplayObjects('leftUpperLobe', checkBox)
         if checkBox is False:
@@ -93,6 +90,10 @@ class LungModelWidget(QtGui.QWidget):
         # self._meshModel.setDisplayObjects('displayLinesLeft', self._ui.leftlungUpper_checkBox.isChecked())
 
     def _leftLungLowerClicked(self):
+        # num = self._logger.getNumberOfMessages()
+        # print num
+        # for i in range(0, num):
+        #     print self._logger.getMessageTextAtIndex(i)
         self._meshModel.setDisplayObjects('displaySurfacesLeft', self._ui.leftlungLower_checkBox.isChecked())
         self._meshModel.setLeftLowerLobeGraphics()
 
