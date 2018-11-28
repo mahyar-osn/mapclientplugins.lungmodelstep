@@ -1,5 +1,6 @@
 import numpy
-import morphic
+import mesher
+
 
 class PCAMesh(object):
 
@@ -14,7 +15,7 @@ class PCAMesh(object):
         if self.input_mesh == None:
             self.input_mesh = mesh
         if isinstance(mesh, str):
-            mesh = morphic.Mesh(mesh)
+            mesh = mesher.Mesh(mesh)
         x = []
         for node in mesh.nodes:
             x.extend(node.values.flatten().tolist())
@@ -43,7 +44,7 @@ class PCAMesh(object):
 
     def generate_mesh(self):
         ### Generate mesh from PCA results
-        self.mesh = morphic.Mesh()
+        self.mesh = mesher.Mesh()
         weights = numpy.zeros(self.num_modes + 1)
         weights[0] = 1.
         self.mesh.add_stdnode('weights', weights)
@@ -99,7 +100,7 @@ def element_dimensions(basis):
 
 def convert_hermite_lagrange(cHmesh, tol=1e-9):
     if isinstance(cHmesh, str):
-        cHmesh = morphic.Mesh(cHmesh)
+        cHmesh = mesher.Mesh(cHmesh)
     
     Xi3d = numpy.mgrid[0:4, 0:4, 0:4] * (1./3.)
     Xi3d = numpy.array([Xi3d[2, :, :].flatten(),
@@ -111,7 +112,7 @@ def convert_hermite_lagrange(cHmesh, tol=1e-9):
     
     X = []
     
-    mesh = morphic.Mesh() # lagrange mesh
+    mesh = mesher.Mesh() # lagrange mesh
     mesh.auto_add_faces = cHmesh.auto_add_faces
     
     nid = 0
