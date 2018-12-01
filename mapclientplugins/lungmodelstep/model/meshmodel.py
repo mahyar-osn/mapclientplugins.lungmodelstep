@@ -1,4 +1,4 @@
-import os, platform
+import os, platform, time
 
 from scaffoldmaker.utils.zinc_utils import *
 
@@ -12,31 +12,65 @@ from mapclientplugins.lungmodelstep.fields.nodes import Nodes as LungNodes
 
 class MeshModel(object):
 
-    def __init__(self, leftregion, rightregion, materialModule):
+    def __init__(self, regions, materialModule, context):
+        self._logger = context.getLogger()
+
         self._path = self.getPluginPath()
 
-        self._leftRegionName = leftregion.getName()
-        self._rightRegionName = rightregion.getName()
-        self._leftRegion = leftregion
-        self._rightRegion = rightregion
+        self._leftRegion = regions['leftRegion']
+        self._rightRegion = regions['rightRegion']
+        self._leftAirwayRegion = regions['leftAirwayRegion']
+        self._rightAirwayRegion = regions['rightAirwayRegion']
+        self._leftArteryRegion = regions['leftArteryRegion']
+        self._rightArteryRegion = regions['rightArteryRegion']
+        self._leftVeinRegion = regions['leftVeinRegion']
+        self._rightVeinRegion = regions['rightVeinRegion']
+
         self._initializeLeftLung()
         self._initializeRightLung()
+        self._initializeLeftAirway()
+        self._initializeRightAirway()
+        self._initializeLeftArtery()
+        self._initializeRightArtery()
+        self._initializeLeftVein()
+        self._initializeRightVein()
 
         self._leftMesh = None
         self._rightMesh = None
 
-        self._elemGroups = {'leftUpperLobe': (63, 64, 69, 70, 75, 76, 80, 81, 85, 86, 87, 89, 90, 91, 93, 94, 96, 97, 98, 99, 101, 106),
-                            'leftLowerLobe': (65, 66, 67, 71, 72, 73, 77, 78, 82, 83, 102, 103, 104, 107, 108, 109),
-                            'rightUpperLobe': (23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38),
-                            'rightMiddleLobe': (1, 2, 7, 8, 13, 14, 18, 19, 39, 40, 45, 46),
-                            'rightLowerLobe': (3, 4, 5, 6, 9, 10, 11, 12, 15, 16, 17, 20, 21, 22, 41, 42, 43, 44, 47, 48, 49, 50)}
+        self._elemGroups = {'leftUpperLobe': (63, 64, 69, 70, 75, 76, 80, 81, 85, 86, 87, 89, 90, 91, 93, 94, 96, 97,
+                                              98, 99, 101, 106, 111, 112, 113, 114, 115, 116, 117, 118),
+                            'leftLowerLobe': (65, 66, 67, 71, 72, 73, 77, 78, 82, 83, 102, 103, 104, 107, 108, 109,
+                                              111, 112, 113, 114, 115, 116, 117, 118),
+                            'rightUpperLobe': (23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 55, 56,
+                                               57, 58, 59, 60, 61, 62),
+                            'rightMiddleLobe': (1, 2, 7, 8, 13, 14, 18, 19, 39, 40, 45, 46, 51, 52, 53, 54, 55, 56, 57,
+                                                58),
+                            'rightLowerLobe': (3, 4, 5, 6, 9, 10, 11, 12, 15, 16, 17, 20, 21, 22, 41, 42, 43, 44, 47,
+                                               48, 49, 50, 51, 52, 53, 54, 59, 60, 61, 62)}
 
         self._materialModule = materialModule
+        self._settings = {'leftUpperLobe': True,
+                          'leftLowerLobe': True,
+                          'rightUpperLobe': True,
+                          'rightMiddleLobe': True,
+                          'rightLowerLobe': True,
+                          'displaySurfacesLeft': True,
+                          'displaySurfacesRight': True,
+                          'displayLAirway': False,
+                          'displayRAirway': False,
+                          'displayLArtery': False,
+                          'displayRArtery': False,
+                          'displayLVein': False,
+                          'displayRVein': False}
 
-        # self._settings = {'displaySurfacesLeft': True, 'displaySurfacesRight': True}
-        self._settings = {'leftUpperLobe': True, 'leftLowerLobe': True, 'rightUpperLobe': True, 'rightMiddleLobe': True,
-                          'rightLowerLobe': True, 'displaySurfacesLeft': True, 'displaySurfacesRight': True}
         self._generateMesh()
+        self._generateLeftAirway()
+        self._generateRightAirway()
+        self._generateLeftArtery()
+        self._generateRightArtery()
+        self._generateLeftVein()
+        self._generateRightVein()
 
         self._nodes = LungNodes()
 
@@ -45,36 +79,72 @@ class MeshModel(object):
 
     def _setVisibility(self, graphicsName, show):
         self._settings[graphicsName] = show
-        if 'Left' in graphicsName:
+        if 'displaySurfacesLeft' in graphicsName:
             graphics = self._leftRegion.getScene().findGraphicsByName(graphicsName)
             graphics.setVisibilityFlag(show)
-        if 'Right' in graphicsName:
+            self._generateMesh()
+        if 'displaySurfacesRight' in graphicsName:
             graphics = self._rightRegion.getScene().findGraphicsByName(graphicsName)
+            graphics.setVisibilityFlag(show)
+            self._generateMesh()
+        if 'LAirway' in graphicsName:
+            graphics = self._leftAirwayRegion.getScene().findGraphicsByName(graphicsName)
+            graphics.setVisibilityFlag(show)
+        if 'RAirway' in graphicsName:
+            graphics = self._rightAirwayRegion.getScene().findGraphicsByName(graphicsName)
+            graphics.setVisibilityFlag(show)
+        if 'LAirway' in graphicsName:
+            graphics = self._leftArteryRegion.getScene().findGraphicsByName(graphicsName)
+            graphics.setVisibilityFlag(show)
+        if 'LArtery' in graphicsName:
+            graphics = self._leftArteryRegion.getScene().findGraphicsByName(graphicsName)
+            graphics.setVisibilityFlag(show)
+        if 'RArtery' in graphicsName:
+            graphics = self._rightArteryRegion.getScene().findGraphicsByName(graphicsName)
+            graphics.setVisibilityFlag(show)
+        if 'LVein' in graphicsName:
+            graphics = self._leftVeinRegion.getScene().findGraphicsByName(graphicsName)
+            graphics.setVisibilityFlag(show)
+        if 'RVein' in graphicsName:
+            graphics = self._rightVeinRegion.getScene().findGraphicsByName(graphicsName)
             graphics.setVisibilityFlag(show)
 
     def _initializeLeftLung(self):
-        nodefile = r'left_average.exnode'
-        elemfile = r'left_average.exelem'
-        if platform.system() == 'Windows':
-            self._leftRegion.readFile(os.path.join('../', self._path, 'fields', nodefile).replace("\\","/"))
-            self._leftRegion.readFile(os.path.join('../', self._path, 'fields', elemfile).replace("\\","/"))
-        else:
-            self._leftRegion.readFile(os.path.join('../', self._path, 'fields', nodefile))
-            self._leftRegion.readFile(os.path.join('../', self._path, 'fields', elemfile))
-
+        self._initializeNodeAndElem('left_average', self._leftRegion)
 
     def _initializeRightLung(self):
-        nodefile = r'right_average.exnode'
-        elemfile = r'right_average.exelem'
+        self._initializeNodeAndElem('right_average', self._rightRegion)
+
+    def _initializeLeftAirway(self):
+        self._initializeNodeAndElem('left_airway', self._leftAirwayRegion)
+
+    def _initializeRightAirway(self):
+        self._initializeNodeAndElem('right_airway', self._rightAirwayRegion)
+
+    def _initializeLeftArtery(self):
+        self._initializeNodeAndElem('left_artery', self._leftArteryRegion)
+
+    def _initializeRightArtery(self):
+        self._initializeNodeAndElem('right_artery', self._rightArteryRegion)
+
+    def _initializeLeftVein(self):
+        self._initializeNodeAndElem('left_vein', self._leftVeinRegion)
+
+    def _initializeRightVein(self):
+        self._initializeNodeAndElem('right_vein', self._rightVeinRegion)
+
+    def _initializeNodeAndElem(self, filename, region):
+        nodefile = filename+'.exnode'
+        elemfile = filename+'.exelem'
         if platform.system() == 'Windows':
-            self._rightRegion.readFile(os.path.join('../', self._path, 'fields', nodefile).replace("\\","/"))
-            self._rightRegion.readFile(os.path.join('../', self._path, 'fields', elemfile).replace("\\","/"))
+            region.readFile(os.path.join('../', self._path, 'fields', nodefile).replace("\\","/"))
+            region.readFile(os.path.join('../', self._path, 'fields', elemfile).replace("\\","/"))
         else:
-            self._rightRegion.readFile(os.path.join('../', self._path, 'fields', nodefile))
-            self._rightRegion.readFile(os.path.join('../', self._path, 'fields', elemfile))
+            region.readFile(os.path.join('../', self._path, 'fields', nodefile))
+            region.readFile(os.path.join('../', self._path, 'fields', elemfile))
 
     def _generateMesh(self):
-        # Left Lung:
+        """ Left Lung """
         self._leftScene = self._leftRegion.getScene()
         fmLeft = self._leftRegion.getFieldmodule()
         fmLeft.beginChange()
@@ -83,11 +153,11 @@ class MeshModel(object):
         self._leftMagnitude.setName('leftmag')
         self._leftMagnitude.setManaged(True)
         """ Create upper and lower lobe groups """
-        self._leftUpperLobe = self._creteLobeGroup(fmLeft, 'leftUpperLobe')
-        self._leftlowerLobe = self._creteLobeGroup(fmLeft, 'leftLowerLobe')
+        self._leftUpperLobe, self._leftUpperLobeMeshGroup = self._creteLobeGroup(fmLeft, 'leftUpperLobe')
+        self._leftlowerLobe, self._leftlowerLobeMeshGroup = self._creteLobeGroup(fmLeft, 'leftLowerLobe')
         fmLeft.endChange()
 
-        # right lung
+        """ Right Lung """
         self._rightScene = self._rightRegion.getScene()
         fmRight = self._rightRegion.getFieldmodule()
         fmRight.beginChange()
@@ -100,8 +170,115 @@ class MeshModel(object):
         self._rightMiddleLobe = self._creteLobeGroup(fmRight, 'rightMiddleLobe')
         self._rightLowerLobe = self._creteLobeGroup(fmRight, 'rightLowerLobe')
         fmRight.endChange()
+        self._setupScene(self._leftRegion, self._rightRegion)
 
-        self.__setupScene(self._leftRegion, self._rightRegion)
+    def _generateLeftAirway(self):
+        """ Left Airway """
+        self._leftAirwayScene = self._leftAirwayRegion.getScene()
+        fmLeftAirway = self._leftAirwayRegion.getFieldmodule()
+        fmLeftAirway.beginChange()
+        self._leftAirwayCoordinates = fmLeftAirway.findFieldByName('coordinates')
+        self._leftAirwayMagnitude = fmLeftAirway.createFieldMagnitude(self._leftAirwayCoordinates)
+        self._leftAirwayMagnitude.setName('leftairwaymag')
+        self._leftAirwayMagnitude.setManaged(True)
+        fmLeftAirway.endChange()
+        leftAirwayScene = self._createScene(self._leftAirwayRegion)
+        leftAirwayScene.beginChange()
+        line = self._createLineGraphics(leftAirwayScene, self._leftAirwayCoordinates, 'displayLAirway', 'airway')
+        line.setRenderLineWidth(2)
+        leftAirwayScene.endChange()
+        graphics = self._leftAirwayRegion.getScene().findGraphicsByName('displayLAirway')
+        graphics.setVisibilityFlag(self._settings['displayLAirway'])
+
+    def _generateRightAirway(self):
+        """ Right Airway """
+        self._rightAirwayScene = self._rightAirwayRegion.getScene()
+        fmRightAirway = self._rightAirwayRegion.getFieldmodule()
+        fmRightAirway.beginChange()
+        self._rightAirwayCoordinates = fmRightAirway.findFieldByName('coordinates')
+        self._rightAirwayMagnitude = fmRightAirway.createFieldMagnitude(self._rightAirwayCoordinates)
+        self._rightAirwayMagnitude.setName('rightairwaymag')
+        self._rightAirwayMagnitude.setManaged(True)
+        fmRightAirway.endChange()
+        rightAirwayScene = self._createScene(self._rightAirwayRegion)
+        rightAirwayScene.beginChange()
+        line = self._createLineGraphics(rightAirwayScene, self._rightAirwayCoordinates, 'displayRAirway', 'airway')
+        line.setRenderLineWidth(2)
+        rightAirwayScene.endChange()
+        graphics = self._rightAirwayRegion.getScene().findGraphicsByName('displayRAirway')
+        graphics.setVisibilityFlag(self._settings['displayRAirway'])
+
+    def _generateLeftArtery(self):
+        """ Left Artery """
+        self._leftArteryScene = self._leftArteryRegion.getScene()
+        fmLeftArtery = self._leftArteryRegion.getFieldmodule()
+        fmLeftArtery.beginChange()
+        self._leftArteryCoordinates = fmLeftArtery.findFieldByName('coordinates')
+        self._leftArteryMagnitude = fmLeftArtery.createFieldMagnitude(self._leftArteryCoordinates)
+        self._leftArteryMagnitude.setName('leftarterymag')
+        self._leftArteryMagnitude.setManaged(True)
+        fmLeftArtery.endChange()
+        leftArteryScene = self._createScene(self._leftArteryRegion)
+        leftArteryScene.beginChange()
+        line = self._createLineGraphics(leftArteryScene, self._leftArteryCoordinates, 'displayLArtery', 'red')
+        line.setRenderLineWidth(2)
+        leftArteryScene.endChange()
+        graphics = self._leftArteryRegion.getScene().findGraphicsByName('displayLArtery')
+        graphics.setVisibilityFlag(self._settings['displayLArtery'])
+
+    def _generateRightArtery(self):
+        """ Right Artery """
+        self._rightArteryScene = self._rightArteryRegion.getScene()
+        fmRightArtery = self._rightArteryRegion.getFieldmodule()
+        fmRightArtery.beginChange()
+        self._rightArteryCoordinates = fmRightArtery.findFieldByName('coordinates')
+        self._rightArteryMagnitude = fmRightArtery.createFieldMagnitude(self._rightArteryCoordinates)
+        self._rightArteryMagnitude.setName('rightarterymag')
+        self._rightArteryMagnitude.setManaged(True)
+        fmRightArtery.endChange()
+        rightArteryScene = self._createScene(self._rightArteryRegion)
+        rightArteryScene.beginChange()
+        line = self._createLineGraphics(rightArteryScene, self._rightArteryCoordinates, 'displayRArtery', 'red')
+        line.setRenderLineWidth(2)
+        rightArteryScene.endChange()
+        graphics = self._rightArteryRegion.getScene().findGraphicsByName('displayRArtery')
+        graphics.setVisibilityFlag(self._settings['displayRArtery'])
+
+    def _generateLeftVein(self):
+        """ Left Vein """
+        self._leftVeinScene = self._leftVeinRegion.getScene()
+        fmLeftVein = self._leftVeinRegion.getFieldmodule()
+        fmLeftVein.beginChange()
+        self._leftVeinCoordinates = fmLeftVein.findFieldByName('coordinates')
+        self._leftVeinMagnitude = fmLeftVein.createFieldMagnitude(self._leftVeinCoordinates)
+        self._leftVeinMagnitude.setName('leftveinmag')
+        self._leftVeinMagnitude.setManaged(True)
+        fmLeftVein.endChange()
+        leftVeinScene = self._createScene(self._leftVeinRegion)
+        leftVeinScene.beginChange()
+        line = self._createLineGraphics(leftVeinScene, self._leftVeinCoordinates, 'displayLVein', 'blue')
+        line.setRenderLineWidth(2)
+        leftVeinScene.endChange()
+        graphics = self._leftVeinRegion.getScene().findGraphicsByName('displayLVein')
+        graphics.setVisibilityFlag(self._settings['displayLVein'])
+
+    def _generateRightVein(self):
+        """ Right Vein """
+        self._rightVeinScene = self._rightVeinRegion.getScene()
+        fmRightVein = self._rightVeinRegion.getFieldmodule()
+        fmRightVein.beginChange()
+        self._rightVeinCoordinates = fmRightVein.findFieldByName('coordinates')
+        self._rightVeinMagnitude = fmRightVein.createFieldMagnitude(self._rightVeinCoordinates)
+        self._rightVeinMagnitude.setName('rightveinmag')
+        self._rightVeinMagnitude.setManaged(True)
+        fmRightVein.endChange()
+        rightVeinScene = self._createScene(self._rightVeinRegion)
+        rightVeinScene.beginChange()
+        line = self._createLineGraphics(rightVeinScene, self._rightVeinCoordinates, 'displayRVein', 'blue')
+        line.setRenderLineWidth(2)
+        rightVeinScene.endChange()
+        graphics = self._rightVeinRegion.getScene().findGraphicsByName('displayRVein')
+        graphics.setVisibilityFlag(self._settings['displayRVein'])
 
     def _creteLobeGroup(self, fm, name):
         mesh = fm.findMeshByDimension(2)
@@ -115,7 +292,7 @@ class MeshModel(object):
             if element.getIdentifier() in self._elemGroups[name]:
                 meshGroup.addElement(element)
             element = el_iter.next()
-        return group
+        return group, meshGroup
 
     def _createFieldGroup(self, fm, name):
         field = fm.findFieldByName(name)
@@ -135,11 +312,6 @@ class MeshModel(object):
         return elementGroup
 
     def _addSubElements(self, grp):
-        """
-
-        :param grp:
-        :return:
-        """
         from opencmiss.zinc.field import FieldGroup
 
         grp.setSubelementHandlingMode(FieldGroup.SUBELEMENT_HANDLING_MODE_FULL)
@@ -152,61 +324,36 @@ class MeshModel(object):
                 meshGroup.addElementsConditional(elementGroup)
         return None
 
-    def __setupScene(self, leftregion, rightregion):
-        """
-
-        :param leftregion:
-        :param rightregion:
-        :return:
-        """
+    def _setupScene(self, leftregion, rightregion):
         """ Left Lung"""
         leftScene = self._createScene(leftregion)
         leftScene.beginChange()
-        self._createLineGraphics(leftScene, self._leftCoordinates, 'displayLinesLeft', 'white')
+        line = self._createLineGraphics(leftScene, self._leftCoordinates, 'displayLinesLeft', 'transTissue')
+        line.setRenderLineWidth(2.5)
         self._surfaceLeft = self._createSurfaceGraphics(leftScene, self._leftCoordinates, 'displaySurfacesLeft', 'solidTissue')
-
         leftScene.endChange()
 
         """ Right Lung"""
         rightScene = self._createScene(rightregion)
         rightScene.beginChange()
-        self._createLineGraphics(rightScene, self._rightCoordinates, 'displayLinesRight', 'white')
+        line = self._createLineGraphics(rightScene, self._rightCoordinates, 'displayLinesRight', 'transTissue')
+        line.setRenderLineWidth(2.5)
         self._surfaceRight = self._createSurfaceGraphics(rightScene, self._rightCoordinates, 'displaySurfacesRight', 'solidTissue')
         rightScene.endChange()
 
     def _createScene(self, region):
-        """
-
-        :param region:
-        :return:
-        """
         return self.getScene(region)
 
     def _createLineGraphics(self, scene, coordinates, name, color):
-        """
-
-        :param scene:
-        :param coordinates:
-        :param name:
-        :param color:
-        :return:
-        """
-        leftMaterialModule = self._materialModule
-        leftLines = scene.createGraphicsLines()
-        leftLines.setCoordinateField(coordinates)
-        leftLines.setName(name)
-        black = leftMaterialModule.findMaterialByName(color)
-        leftLines.setMaterial(black)
+        materialModule = self._materialModule
+        lines = scene.createGraphicsLines()
+        lines.setCoordinateField(coordinates)
+        lines.setName(name)
+        black = materialModule.findMaterialByName(color)
+        lines.setMaterial(black)
+        return lines
 
     def _createSurfaceGraphics(self, scene, coordinates, name, color):
-        """
-
-        :param scene:
-        :param coordinates:
-        :param name:
-        :param color:
-        :return:
-        """
         surface = scene.createGraphicsSurfaces()
         surface.setCoordinateField(coordinates)
         surface.setRenderPolygonMode(Graphics.RENDER_POLYGON_MODE_SHADED)
@@ -217,10 +364,10 @@ class MeshModel(object):
         return surface
 
     def setLeftUpperLobeGraphics(self):
-        self._surfaceLeft.setSubgroupField(self._leftlowerLobe)
+        self._surfaceLeft.setSubgroupField(self._leftUpperLobe)
 
     def setLeftLowerLobeGraphics(self):
-        self._surfaceLeft.setSubgroupField(self._leftUpperLobe)
+        self._surfaceLeft.setSubgroupField(self._leftlowerLobe)
 
     def setRightUpperLobeGraphics(self):
         self._surfaceRight.setSubgroupField(self._rightMiddleLobe)
