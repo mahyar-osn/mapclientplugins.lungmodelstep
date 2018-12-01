@@ -1,4 +1,6 @@
-from PySide import QtGui
+import time
+
+from PySide import QtGui, QtCore
 
 from mapclientplugins.lungmodelstep.view.ui_lungmodelwidget import Ui_LungModelWidget
 
@@ -25,6 +27,13 @@ class LungModelWidget(QtGui.QWidget):
         self._settings = {'view-parameters': {}}
         self._doneCallback = None
 
+        self._airwayLeftFirstClicked = True
+        self._airwayRightFirstClicked = True
+        self._arteryLeftFirstClicked = True
+        self._arteryRightFirstClicked = True
+        self._veinLeftFirstClicked = True
+        self._veinRightFirstClicked = True
+
         self._ui.sceneviewer_widget.setContext(model.getContext())
         self._initialUiState()
         self._makeConnections()
@@ -40,6 +49,15 @@ class LungModelWidget(QtGui.QWidget):
         self._ui.rightlungUpper_checkBox.clicked.connect(self._rightLungUpperClicked)
         self._ui.rightlungMiddle_checkBox.clicked.connect(self._rightLungMiddleClicked)
         self._ui.rightlungLower_checkBox.clicked.connect(self._rightLungLowerClicked)
+        """ Airway """
+        self._ui.leftAirway_checkBox.clicked.connect(self._leftAirwayClicked)
+        self._ui.rightAirway_checkBox.clicked.connect(self._rightAirwayClicked)
+        """ Artery """
+        self._ui.leftArtery_checkBox.clicked.connect(self._leftArteryClicked)
+        self._ui.rightArtery_checkBox.clicked.connect(self._rightArteryClicked)
+        """ Vein """
+        self._ui.leftVein_checkBox.clicked.connect(self._leftVeinClicked)
+        self._ui.rightVein_checkBox.clicked.connect(self._rightVeinClicked)
         """ Modes """
         self._ui.modeOne_doubleSpinBox.valueChanged.connect(self._modeOneChanged)
         self._ui.modeTwo_doubleSpinBox.valueChanged.connect(self._modeTwoChanged)
@@ -81,21 +99,24 @@ class LungModelWidget(QtGui.QWidget):
         self._doneCallback = done_callback
 
     def _leftLungUpperClicked(self):
-        checkBox = self._ui.leftlungUpper_checkBox.isChecked()
-        self._meshModel.setDisplayObjects('leftUpperLobe', checkBox)
-        if checkBox is False:
+        checkBox1 = self._ui.leftlungUpper_checkBox.isChecked()
+        checkBox2 = self._ui.leftlungLower_checkBox.isChecked()
+        if checkBox1 and checkBox2:
+            self._meshModel.setDisplayObjects('displaySurfacesLeft', True)
+        elif checkBox1 is False and checkBox2 is True:
             self._meshModel.setLeftUpperLobeGraphics()
-        else:
-            self._meshModel.setLeftLowerLobeGraphics()
-        # self._meshModel.setDisplayObjects('displayLinesLeft', self._ui.leftlungUpper_checkBox.isChecked())
 
     def _leftLungLowerClicked(self):
         # num = self._logger.getNumberOfMessages()
         # print num
         # for i in range(0, num):
         #     print self._logger.getMessageTextAtIndex(i)
-        self._meshModel.setDisplayObjects('displaySurfacesLeft', self._ui.leftlungLower_checkBox.isChecked())
-        self._meshModel.setLeftLowerLobeGraphics()
+        checkBox1 = self._ui.leftlungUpper_checkBox.isChecked()
+        checkBox2 = self._ui.leftlungLower_checkBox.isChecked()
+        if checkBox1 and checkBox2:
+            self._meshModel.setDisplayObjects('displaySurfacesLeft', True)
+        elif checkBox1 is True and checkBox2 is False:
+            self._meshModel.setLeftLowerLobeGraphics()
 
     def _rightLungUpperClicked(self):
         self._meshModel.setDisplayObjects('displaySurfacesRight', self._ui.rightlungUpper_checkBox.isChecked())
@@ -108,6 +129,114 @@ class LungModelWidget(QtGui.QWidget):
     def _rightLungLowerClicked(self):
         self._meshModel.setDisplayObjects('displaySurfacesRight', self._ui.rightlungLower_checkBox.isChecked())
         self._meshModel.setRighttLowerLobeGraphics()
+
+    def _leftAirwayClicked(self):
+        self._resetClicked()
+        # pausing the time just to pretend as if a real growing is happening.
+        # (this will obviously be replace with real growing!)
+        if self._airwayLeftFirstClicked:
+            time.sleep(5)
+            self._airwayLeftFirstClicked = False
+        checkBox = self._ui.leftAirway_checkBox.isChecked()
+        self._meshModel.setDisplayObjects('displayLAirway', checkBox)
+        if self._ui.leftAirway_checkBox.isChecked() or self._ui.rightAirway_checkBox.isChecked():
+            self._ui.morphing_groupBox.setEnabled(False)
+        elif self._ui.leftArtery_checkBox.isChecked() or self._ui.rightArtery_checkBox.isChecked():
+            self._ui.morphing_groupBox.setEnabled(False)
+        elif self._ui.leftVein_checkBox.isChecked() or self._ui.rightVein_checkBox.isChecked():
+            self._ui.morphing_groupBox.setEnabled(False)
+        else:
+            self._ui.morphing_groupBox.setEnabled(True)
+
+    def _rightAirwayClicked(self):
+        self._resetClicked()
+        # pausing the time just to pretend as if a real growing is happening.
+        # (this will obviously be replace with real growing!)
+        if self._airwayRightFirstClicked:
+            time.sleep(5)
+            self._airwayRightFirstClicked = False
+        checkBox = self._ui.rightAirway_checkBox.isChecked()
+        self._meshModel.setDisplayObjects('displayRAirway', checkBox)
+        if self._ui.leftAirway_checkBox.isChecked() or self._ui.rightAirway_checkBox.isChecked():
+            self._ui.morphing_groupBox.setEnabled(False)
+        elif self._ui.leftArtery_checkBox.isChecked() or self._ui.rightArtery_checkBox.isChecked():
+            self._ui.morphing_groupBox.setEnabled(False)
+        elif self._ui.leftVein_checkBox.isChecked() or self._ui.rightVein_checkBox.isChecked():
+            self._ui.morphing_groupBox.setEnabled(False)
+        else:
+            self._ui.morphing_groupBox.setEnabled(True)
+
+    def _leftArteryClicked(self):
+        self._resetClicked()
+        # pausing the time just to pretend as if a real growing is happening.
+        # (this will obviously be replace with real growing!)
+        if self._arteryLeftFirstClicked:
+            time.sleep(5)
+            self._arteryLeftFirstClicked = False
+        checkBox = self._ui.leftArtery_checkBox.isChecked()
+        self._meshModel.setDisplayObjects('displayLArtery', checkBox)
+        if self._ui.leftArtery_checkBox.isChecked() or self._ui.rightArtery_checkBox.isChecked():
+            self._ui.morphing_groupBox.setEnabled(False)
+        elif self._ui.leftAirway_checkBox.isChecked() or self._ui.rightAirway_checkBox.isChecked():
+            self._ui.morphing_groupBox.setEnabled(False)
+        elif self._ui.leftVein_checkBox.isChecked() or self._ui.rightVein_checkBox.isChecked():
+            self._ui.morphing_groupBox.setEnabled(False)
+        else:
+            self._ui.morphing_groupBox.setEnabled(True)
+
+    def _rightArteryClicked(self):
+        self._resetClicked()
+        # pausing the time just to pretend as if a real growing is happening.
+        # (this will obviously be replace with real growing!)
+        if self._arteryRightFirstClicked:
+            time.sleep(5)
+            self._arteryRightFirstClicked = False
+        checkBox = self._ui.rightArtery_checkBox.isChecked()
+        self._meshModel.setDisplayObjects('displayRArtery', checkBox)
+        if self._ui.leftArtery_checkBox.isChecked() or self._ui.rightArtery_checkBox.isChecked():
+            self._ui.morphing_groupBox.setEnabled(False)
+        elif self._ui.leftAirway_checkBox.isChecked() or self._ui.rightAirway_checkBox.isChecked():
+            self._ui.morphing_groupBox.setEnabled(False)
+        elif self._ui.leftVein_checkBox.isChecked() or self._ui.rightVein_checkBox.isChecked():
+            self._ui.morphing_groupBox.setEnabled(False)
+        else:
+            self._ui.morphing_groupBox.setEnabled(True)
+
+    def _leftVeinClicked(self):
+        self._resetClicked()
+        # pausing the time just to pretend as if a real growing is happening.
+        # (this will obviously be replace with real growing!)
+        if self._veinLeftFirstClicked:
+            time.sleep(5)
+            self._veinLeftFirstClicked = False
+        checkBox = self._ui.leftVein_checkBox.isChecked()
+        self._meshModel.setDisplayObjects('displayLVein', checkBox)
+        if self._ui.leftVein_checkBox.isChecked() or self._ui.rightVein_checkBox.isChecked():
+            self._ui.morphing_groupBox.setEnabled(False)
+        elif self._ui.leftAirway_checkBox.isChecked() or self._ui.rightAirway_checkBox.isChecked():
+            self._ui.morphing_groupBox.setEnabled(False)
+        elif self._ui.leftArtery_checkBox.isChecked() or self._ui.rightArtery_checkBox.isChecked():
+            self._ui.morphing_groupBox.setEnabled(False)
+        else:
+            self._ui.morphing_groupBox.setEnabled(True)
+
+    def _rightVeinClicked(self):
+        self._resetClicked()
+        # pausing the time just to pretend as if a real growing is happening.
+        # (this will obviously be replace with real growing!)
+        if self._veinRightFirstClicked:
+            time.sleep(5)
+            self._veinRightFirstClicked = False
+        checkBox = self._ui.rightVein_checkBox.isChecked()
+        self._meshModel.setDisplayObjects('displayRVein', checkBox)
+        if self._ui.leftVein_checkBox.isChecked() or self._ui.rightVein_checkBox.isChecked():
+            self._ui.morphing_groupBox.setEnabled(False)
+        elif self._ui.leftAirway_checkBox.isChecked() or self._ui.rightAirway_checkBox.isChecked():
+            self._ui.morphing_groupBox.setEnabled(False)
+        elif self._ui.leftArtery_checkBox.isChecked() or self._ui.rightArtery_checkBox.isChecked():
+            self._ui.morphing_groupBox.setEnabled(False)
+        else:
+            self._ui.morphing_groupBox.setEnabled(True)
 
     def _resetClicked(self):
         self._resetSpinBoxValues()
@@ -161,7 +290,6 @@ class LungModelWidget(QtGui.QWidget):
         leftNodes, rightNodes = self._getMorphedLung()
         self._meshModel.applyMorphing(leftNodes, lung='left')
         self._meshModel.applyMorphing(rightNodes, lung='right')
-
 
 
 
