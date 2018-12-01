@@ -1,8 +1,6 @@
 import os
-import subprocess
 
-import numpy as np
-import pandas as pd
+from numpy import asarray, float64, zeros
 
 from mapclientplugins.lungmodelstep.morphic.mesher import Mesh
 from mapclientplugins.lungmodelstep.fields.nodes import Nodes
@@ -54,7 +52,7 @@ class PCAModel(object):
         for nodeNumber in nodes:
             node = self._pcaModel.nodes[nodeNumber]
             nodeValues.append(node.values)
-        return np.asarray(nodeValues, dtype=np.float64)
+        return asarray(nodeValues, dtype=float64)
 
     def _getRightLungNodes(self):
         nodeValues = list()
@@ -62,11 +60,11 @@ class PCAModel(object):
         for nodeNumber in nodes:
             node = self._pcaModel.nodes[nodeNumber]
             nodeValues.append(node.values)
-        return np.asarray(nodeValues, dtype=np.float64)
+        return asarray(nodeValues, dtype=float64)
 
     def _getLungNodeDescription(self, nArray, lung=None):
         nodeIndx = self._nodes.setNode(lung=lung)
-        nodeDescription = np.zeros((nArray.shape[0], nArray.shape[1], nArray.shape[2] + 1))
+        nodeDescription = zeros((nArray.shape[0], nArray.shape[1], nArray.shape[2] + 1))
         for i in range(nodeDescription.shape[0]):
             nodeDescription[i, :, 0] = float(nodeIndx[i])
             nodeDescription[i, :, 1:] = nArray[i, :, :]
