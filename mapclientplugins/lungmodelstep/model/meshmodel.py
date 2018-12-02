@@ -50,13 +50,21 @@ class MeshModel(object):
                                                48, 49, 50, 51, 52, 53, 54, 59, 60, 61, 62)}
 
         self._materialModule = materialModule
-        self._settings = {'leftUpperLobe': True,
-                          'leftLowerLobe': True,
-                          'rightUpperLobe': True,
-                          'rightMiddleLobe': True,
-                          'rightLowerLobe': True,
-                          'displaySurfacesLeft': True,
-                          'displaySurfacesRight': True,
+        # self._settings = {'leftUpperLobe': True,
+        #                   'leftLowerLobe': True,
+        #                   'rightUpperLobe': True,
+        #                   'rightMiddleLobe': True,
+        #                   'rightLowerLobe': True,
+        #                   'displaySurfaceLeft': True,
+        #                   'displaySurfaceRight': True,
+        #                   'displayLAirway': False,
+        #                   'displayRAirway': False,
+        #                   'displayLArtery': False,
+        #                   'displayRArtery': False,
+        #                   'displayLVein': False,
+        #                   'displayRVein': False}
+        self._settings = {'displaySurfaceLeft': True,
+                          'displaySurfaceRight': True,
                           'displayLAirway': False,
                           'displayRAirway': False,
                           'displayLArtery': False,
@@ -79,14 +87,12 @@ class MeshModel(object):
 
     def _setVisibility(self, graphicsName, show):
         self._settings[graphicsName] = show
-        if 'displaySurfacesLeft' in graphicsName:
+        if 'displaySurfaceLeft' in graphicsName:
             graphics = self._leftRegion.getScene().findGraphicsByName(graphicsName)
             graphics.setVisibilityFlag(show)
-            self._generateMesh()
-        if 'displaySurfacesRight' in graphicsName:
+        if 'displaySurfaceRight' in graphicsName:
             graphics = self._rightRegion.getScene().findGraphicsByName(graphicsName)
             graphics.setVisibilityFlag(show)
-            self._generateMesh()
         if 'LAirway' in graphicsName:
             graphics = self._leftAirwayRegion.getScene().findGraphicsByName(graphicsName)
             graphics.setVisibilityFlag(show)
@@ -153,8 +159,8 @@ class MeshModel(object):
         self._leftMagnitude.setName('leftmag')
         self._leftMagnitude.setManaged(True)
         """ Create upper and lower lobe groups """
-        self._leftUpperLobe, self._leftUpperLobeMeshGroup = self._creteLobeGroup(fmLeft, 'leftUpperLobe')
-        self._leftlowerLobe, self._leftlowerLobeMeshGroup = self._creteLobeGroup(fmLeft, 'leftLowerLobe')
+        # self._leftUpperLobe, self._leftUpperLobeMeshGroup = self._creteLobeGroup(fmLeft, 'leftUpperLobe')
+        # self._leftlowerLobe, self._leftlowerLobeMeshGroup = self._creteLobeGroup(fmLeft, 'leftLowerLobe')
         fmLeft.endChange()
 
         """ Right Lung """
@@ -166,9 +172,9 @@ class MeshModel(object):
         self._rightMagnitude.setName('rightmag')
         self._rightMagnitude.setManaged(True)
         """ Create upper and lower lobe groups """
-        self._rightUpperLobe = self._creteLobeGroup(fmRight, 'rightUpperLobe')
-        self._rightMiddleLobe = self._creteLobeGroup(fmRight, 'rightMiddleLobe')
-        self._rightLowerLobe = self._creteLobeGroup(fmRight, 'rightLowerLobe')
+        # self._rightUpperLobe = self._creteLobeGroup(fmRight, 'rightUpperLobe')
+        # self._rightMiddleLobe = self._creteLobeGroup(fmRight, 'rightMiddleLobe')
+        # self._rightLowerLobe = self._creteLobeGroup(fmRight, 'rightLowerLobe')
         fmRight.endChange()
         self._setupScene(self._leftRegion, self._rightRegion)
 
@@ -330,7 +336,7 @@ class MeshModel(object):
         leftScene.beginChange()
         line = self._createLineGraphics(leftScene, self._leftCoordinates, 'displayLinesLeft', 'transTissue')
         line.setRenderLineWidth(2.5)
-        self._surfaceLeft = self._createSurfaceGraphics(leftScene, self._leftCoordinates, 'displaySurfacesLeft', 'solidTissue')
+        self._surfaceLeft = self._createSurfaceGraphics(leftScene, self._leftCoordinates, 'displaySurfaceLeft', 'solidTissue')
         leftScene.endChange()
 
         """ Right Lung"""
@@ -338,7 +344,7 @@ class MeshModel(object):
         rightScene.beginChange()
         line = self._createLineGraphics(rightScene, self._rightCoordinates, 'displayLinesRight', 'transTissue')
         line.setRenderLineWidth(2.5)
-        self._surfaceRight = self._createSurfaceGraphics(rightScene, self._rightCoordinates, 'displaySurfacesRight', 'solidTissue')
+        self._surfaceRight = self._createSurfaceGraphics(rightScene, self._rightCoordinates, 'displaySurfaceRight', 'solidTissue')
         rightScene.endChange()
 
     def _createScene(self, region):
@@ -363,23 +369,23 @@ class MeshModel(object):
         surface.setVisibilityFlag(self.isDisplaySurfaces(name))
         return surface
 
-    def setLeftUpperLobeGraphics(self):
-        self._surfaceLeft.setSubgroupField(self._leftUpperLobe)
-
-    def setLeftLowerLobeGraphics(self):
-        self._surfaceLeft.setSubgroupField(self._leftlowerLobe)
-
-    def setRightUpperLobeGraphics(self):
-        self._surfaceRight.setSubgroupField(self._rightMiddleLobe)
-        self._surfaceRight.setSubgroupField(self._rightLowerLobe)
-
-    def setRightMiddleLobeGraphics(self):
-        self._surfaceRight.setSubgroupField(self._rightUpperLobe)
-        self._surfaceRight.setSubgroupField(self._rightLowerLobe)
-
-    def setRighttLowerLobeGraphics(self):
-        self._surfaceRight.setSubgroupField(self._rightUpperLobe)
-        self._surfaceRight.setSubgroupField(self._rightMiddleLobe)
+    # def setLeftUpperLobeGraphics(self):
+    #     self._surfaceLeft.setSubgroupField(self._leftlowerLobe)
+    #
+    # def setLeftLowerLobeGraphics(self):
+    #     self._surfaceLeft.setSubgroupField(self._leftUpperLobe)
+    #
+    # def setRightUpperLobeGraphics(self):
+    #     self._surfaceRight.setSubgroupField(self._rightMiddleLobe)
+    #     self._surfaceRight.setSubgroupField(self._rightLowerLobe)
+    #
+    # def setRightMiddleLobeGraphics(self):
+    #     self._surfaceRight.setSubgroupField(self._rightUpperLobe)
+    #     self._surfaceRight.setSubgroupField(self._rightLowerLobe)
+    #
+    # def setRighttLowerLobeGraphics(self):
+    #     self._surfaceRight.setSubgroupField(self._rightUpperLobe)
+    #     self._surfaceRight.setSubgroupField(self._rightMiddleLobe)
 
     @staticmethod
     def getScene(region):
