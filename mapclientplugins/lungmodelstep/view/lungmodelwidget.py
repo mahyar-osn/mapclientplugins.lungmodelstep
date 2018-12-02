@@ -2,7 +2,7 @@ import time
 
 from PySide import QtGui, QtCore
 
-from mapclientplugins.lungmodelstep.view.ui_lungmodelwidget import Ui_LungModelWidget
+from mapclientplugins.lungmodelstep.view.ui_lungmodelwidget_temp import Ui_LungModelWidget
 
 
 class LungModelWidget(QtGui.QWidget):
@@ -43,12 +43,14 @@ class LungModelWidget(QtGui.QWidget):
         self._ui.exit_pushButton.clicked.connect(self._doneClicked)
         self._ui.reset_pushButton.clicked.connect(self._resetClicked)
         """ Left lung """
-        self._ui.leftlungUpper_checkBox.clicked.connect(self._leftLungUpperClicked)
-        self._ui.leftlungLower_checkBox.clicked.connect(self._leftLungLowerClicked)
+        self._ui.leftLung_checkBox.clicked.connect(self._leftLungClicked)
+        # self._ui.leftlungUpper_checkBox.clicked.connect(self._leftLungUpperClicked)
+        # self._ui.leftlungLower_checkBox.clicked.connect(self._leftLungLowerClicked)
         """ Right lung """
-        self._ui.rightlungUpper_checkBox.clicked.connect(self._rightLungUpperClicked)
-        self._ui.rightlungMiddle_checkBox.clicked.connect(self._rightLungMiddleClicked)
-        self._ui.rightlungLower_checkBox.clicked.connect(self._rightLungLowerClicked)
+        self._ui.rightLung_checkBox.clicked.connect(self._rightLungClicked)
+        # self._ui.rightlungUpper_checkBox.clicked.connect(self._rightLungUpperClicked)
+        # self._ui.rightlungMiddle_checkBox.clicked.connect(self._rightLungMiddleClicked)
+        # self._ui.rightlungLower_checkBox.clicked.connect(self._rightLungLowerClicked)
         """ Airway """
         self._ui.leftAirway_checkBox.clicked.connect(self._leftAirwayClicked)
         self._ui.rightAirway_checkBox.clicked.connect(self._rightAirwayClicked)
@@ -70,11 +72,13 @@ class LungModelWidget(QtGui.QWidget):
         self._doneCallback()
 
     def _initialUiState(self):
-        self._ui.leftlungUpper_checkBox.setChecked(True)
-        self._ui.leftlungLower_checkBox.setChecked(True)
-        self._ui.rightlungUpper_checkBox.setChecked(True)
-        self._ui.rightlungMiddle_checkBox.setChecked(True)
-        self._ui.rightlungLower_checkBox.setChecked(True)
+        self._ui.leftLung_checkBox.setChecked(True)
+        self._ui.rightLung_checkBox.setChecked(True)
+        # self._ui.leftlungUpper_checkBox.setChecked(True)
+        # self._ui.leftlungLower_checkBox.setChecked(True)
+        # self._ui.rightlungUpper_checkBox.setChecked(True)
+        # self._ui.rightlungMiddle_checkBox.setChecked(True)
+        # self._ui.rightlungLower_checkBox.setChecked(True)
 
     def _graphicsInitialized(self):
         sceneViewer = self._ui.sceneviewer_widget.getSceneviewer()
@@ -98,44 +102,60 @@ class LungModelWidget(QtGui.QWidget):
     def registerDoneCallback(self, done_callback):
         self._doneCallback = done_callback
 
-    def _leftLungUpperClicked(self):
-        checkBox1 = self._ui.leftlungUpper_checkBox.isChecked()
-        checkBox2 = self._ui.leftlungLower_checkBox.isChecked()
-        if checkBox1 and checkBox2:
-            self._meshModel.setDisplayObjects('displaySurfacesLeft', True)
-        elif checkBox1 is False and checkBox2 is True:
-            self._meshModel.setLeftUpperLobeGraphics()
+    def _leftLungClicked(self):
+        checkBox = self._ui.leftLung_checkBox.isChecked()
+        self._meshModel.setDisplayObjects('displaySurfaceLeft', checkBox)
 
-    def _leftLungLowerClicked(self):
-        # num = self._logger.getNumberOfMessages()
-        # print num
-        # for i in range(0, num):
-        #     print self._logger.getMessageTextAtIndex(i)
-        checkBox1 = self._ui.leftlungUpper_checkBox.isChecked()
-        checkBox2 = self._ui.leftlungLower_checkBox.isChecked()
-        if checkBox1 and checkBox2:
-            self._meshModel.setDisplayObjects('displaySurfacesLeft', True)
-        elif checkBox1 is True and checkBox2 is False:
-            self._meshModel.setLeftLowerLobeGraphics()
+    def _rightLungClicked(self):
+        checkBox = self._ui.rightLung_checkBox.isChecked()
+        self._meshModel.setDisplayObjects('displaySurfaceRight', checkBox)
 
-    def _rightLungUpperClicked(self):
-        self._meshModel.setDisplayObjects('displaySurfacesRight', self._ui.rightlungUpper_checkBox.isChecked())
-        self._meshModel.setRightUpperLobeGraphics()
+    # def _leftLungUpperClicked(self):
+    #     checkBox1 = self._ui.leftlungUpper_checkBox.isChecked()
+    #     checkBox2 = self._ui.leftlungLower_checkBox.isChecked()
+    #     if checkBox1 and checkBox2:
+    #         print("Upper Lobe: ON")
+    #         print("Lower Lobe: ON")
+    #         self._meshModel.setDisplayObjects('displaySurfacesLeft', True)
+    #     elif checkBox1 is False and checkBox2 is True:
+    #         print("Upper Lobe: OFF")
+    #         print("Upper Lobe: ON")
+    #         self._meshModel.setLeftUpperLobeGraphics()
+    #
+    # def _leftLungLowerClicked(self):
+    #     # num = self._logger.getNumberOfMessages()
+    #     # print num
+    #     # for i in range(0, num):
+    #     #     print self._logger.getMessageTextAtIndex(i)
+    #     checkBox1 = self._ui.leftlungUpper_checkBox.isChecked()
+    #     checkBox2 = self._ui.leftlungLower_checkBox.isChecked()
+    #     if checkBox1 and checkBox2:
+    #         print("Upper Lobe: ON")
+    #         print("Lower Lobe: ON")
+    #         self._meshModel.setDisplayObjects('displaySurfacesLeft', True)
+    #     elif checkBox1 is True and checkBox2 is False:
+    #         print("Upper Lobe: ON")
+    #         print("Lower Lobe: OFF")
+    #         self._meshModel.setLeftLowerLobeGraphics()
 
-    def _rightLungMiddleClicked(self):
-        self._meshModel.setDisplayObjects('displaySurfacesRight', self._ui.rightlungMiddle_checkBox.isChecked())
-        self._meshModel.setRightMiddleLobeGraphics()
-
-    def _rightLungLowerClicked(self):
-        self._meshModel.setDisplayObjects('displaySurfacesRight', self._ui.rightlungLower_checkBox.isChecked())
-        self._meshModel.setRighttLowerLobeGraphics()
+    # def _rightLungUpperClicked(self):
+    #     self._meshModel.setDisplayObjects('displaySurfacesRight', self._ui.rightlungUpper_checkBox.isChecked())
+    #     self._meshModel.setRightUpperLobeGraphics()
+    #
+    # def _rightLungMiddleClicked(self):
+    #     self._meshModel.setDisplayObjects('displaySurfacesRight', self._ui.rightlungMiddle_checkBox.isChecked())
+    #     self._meshModel.setRightMiddleLobeGraphics()
+    #
+    # def _rightLungLowerClicked(self):
+    #     self._meshModel.setDisplayObjects('displaySurfacesRight', self._ui.rightlungLower_checkBox.isChecked())
+    #     self._meshModel.setRighttLowerLobeGraphics()
 
     def _leftAirwayClicked(self):
         self._resetClicked()
         # pausing the time just to pretend as if a real growing is happening.
         # (this will obviously be replace with real growing!)
         if self._airwayLeftFirstClicked:
-            time.sleep(5)
+            time.sleep(3)
             self._airwayLeftFirstClicked = False
         checkBox = self._ui.leftAirway_checkBox.isChecked()
         self._meshModel.setDisplayObjects('displayLAirway', checkBox)
@@ -153,7 +173,7 @@ class LungModelWidget(QtGui.QWidget):
         # pausing the time just to pretend as if a real growing is happening.
         # (this will obviously be replace with real growing!)
         if self._airwayRightFirstClicked:
-            time.sleep(5)
+            time.sleep(3)
             self._airwayRightFirstClicked = False
         checkBox = self._ui.rightAirway_checkBox.isChecked()
         self._meshModel.setDisplayObjects('displayRAirway', checkBox)
@@ -171,7 +191,7 @@ class LungModelWidget(QtGui.QWidget):
         # pausing the time just to pretend as if a real growing is happening.
         # (this will obviously be replace with real growing!)
         if self._arteryLeftFirstClicked:
-            time.sleep(5)
+            time.sleep(3)
             self._arteryLeftFirstClicked = False
         checkBox = self._ui.leftArtery_checkBox.isChecked()
         self._meshModel.setDisplayObjects('displayLArtery', checkBox)
@@ -189,7 +209,7 @@ class LungModelWidget(QtGui.QWidget):
         # pausing the time just to pretend as if a real growing is happening.
         # (this will obviously be replace with real growing!)
         if self._arteryRightFirstClicked:
-            time.sleep(5)
+            time.sleep(3)
             self._arteryRightFirstClicked = False
         checkBox = self._ui.rightArtery_checkBox.isChecked()
         self._meshModel.setDisplayObjects('displayRArtery', checkBox)
@@ -207,7 +227,7 @@ class LungModelWidget(QtGui.QWidget):
         # pausing the time just to pretend as if a real growing is happening.
         # (this will obviously be replace with real growing!)
         if self._veinLeftFirstClicked:
-            time.sleep(5)
+            time.sleep(3)
             self._veinLeftFirstClicked = False
         checkBox = self._ui.leftVein_checkBox.isChecked()
         self._meshModel.setDisplayObjects('displayLVein', checkBox)
@@ -225,7 +245,7 @@ class LungModelWidget(QtGui.QWidget):
         # pausing the time just to pretend as if a real growing is happening.
         # (this will obviously be replace with real growing!)
         if self._veinRightFirstClicked:
-            time.sleep(5)
+            time.sleep(3)
             self._veinRightFirstClicked = False
         checkBox = self._ui.rightVein_checkBox.isChecked()
         self._meshModel.setDisplayObjects('displayRVein', checkBox)
